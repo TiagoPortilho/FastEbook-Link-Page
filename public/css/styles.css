@@ -35,8 +35,9 @@ body {
 }
 
 .social-icon {
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
+    font-size: 25px;
     border: 2px solid #fff;
     border-radius: 50%;
     color: #fff;
@@ -44,7 +45,6 @@ body {
     align-items: center;
     justify-content: center;
     transition: background-color 0.3s ease, transform 0.3s ease;
-    font-size: 20px;
 }
 
 .social-icon:hover {
@@ -52,3 +52,37 @@ body {
     transform: scale(1.2);
 }
 
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+
+.logo-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    padding: 6px;
+    background: linear-gradient(135deg, var(--cor-primaria), var(--cor-terciaria));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
+}
+
+.logo-circle:hover {
+    transform: scale(1.05);
+}
+
+.logo-circle img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}

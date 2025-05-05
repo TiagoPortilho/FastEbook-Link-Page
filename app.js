@@ -1,12 +1,10 @@
 import express from 'express';
 import session from 'express-session';
 import bcrypt from 'bcrypt';
-import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
+import pool from './db.js';
 
 dotenv.config();
 
@@ -15,37 +13,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Caminho do banco de dados
-const file = path.join(__dirname, 'db.json');
-const adapter = new JSONFile(file);
-
-// Passa o defaultData aqui
-const db = new Low(adapter, { links: [] });  
-
-// Função para inicializar o banco de dados com dados padrão
-async function initDatabase() {
-  try {
-    // Se o arquivo não existir, cria um com a estrutura inicial
-    if (!fs.existsSync(file)) {
-      fs.writeFileSync(file, JSON.stringify({ links: [] }));
-    }
-
-    // Lê os dados do arquivo
-    await db.read();
-
-    // Se os dados não existirem ou estiverem incompletos, inicializa com a estrutura padrão
-    if (!db.data) {
-      db.data = { links: [] };
-      await db.write();
-    }
-  } catch (error) {
-    console.error('Erro ao inicializar o banco de dados:', error);
-  }
-}
-
-await initDatabase(); // Chama a função para garantir que o banco está inicializado
-
-// Configurações do app
+// Middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
@@ -55,7 +23,7 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
   })
 );
 
@@ -67,8 +35,13 @@ function isAuthenticated(req, res, next) {
 
 // Página inicial
 app.get('/', async (req, res) => {
-  await db.read();
-  res.render('index', { links: db.data.links });
+  try {
+    const { rows } = await pool.query('SELECT * FROM links ORDER BY id DESC');
+    res.render('index', { links: rows });
+  } catch (err) {
+    console.error('Erro ao carregar links:', err);
+    res.status(500).send('Erro ao carregar os links');
+  }
 });
 
 // Página de login
@@ -97,26 +70,37 @@ app.get('/logout', (req, res) => {
 
 // Painel admin
 app.get('/admin', isAuthenticated, async (req, res) => {
-  await db.read();
-  res.render('admin', { links: db.data.links });
+  try {
+    const { rows } = await pool.query('SELECT * FROM links ORDER BY id DESC');
+    res.render('admin', { links: rows });
+  } catch (err) {
+    console.error('Erro ao carregar painel:', err);
+    res.status(500).send('Erro ao carregar o painel');
+  }
 });
 
 // Adicionar link
 app.post('/admin/add', isAuthenticated, async (req, res) => {
   const { titulo, url } = req.body;
-  const novoId = Date.now();
-
-  db.data.links.push({ id: novoId, titulo, url });
-  await db.write();
-  res.redirect('/admin');
+  try {
+    await pool.query('INSERT INTO links (titulo, url) VALUES ($1, $2)', [titulo, url]);
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('Erro ao adicionar link:', err);
+    res.status(500).send('Erro ao adicionar link');
+  }
 });
 
 // Deletar link
 app.post('/admin/delete/:id', isAuthenticated, async (req, res) => {
   const id = parseInt(req.params.id);
-  db.data.links = db.data.links.filter(link => link.id !== id);
-  await db.write();
-  res.redirect('/admin');
+  try {
+    await pool.query('DELETE FROM links WHERE id = $1', [id]);
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('Erro ao deletar link:', err);
+    res.status(500).send('Erro ao deletar link');
+  }
 });
 
 // Inicializa o servidor

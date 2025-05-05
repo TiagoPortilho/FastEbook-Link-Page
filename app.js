@@ -83,13 +83,14 @@ app.get('/admin', isAuthenticated, async (req, res) => {
 app.post('/admin/add', isAuthenticated, async (req, res) => {
   const { titulo, url } = req.body;
   try {
-    await pool.query('INSERT INTO links (titulo, url) VALUES ($1, $2)', [titulo, url]);
+    await pool.query('INSERT INTO links (title, url) VALUES ($1, $2)', [titulo, url]);
     res.redirect('/admin');
   } catch (err) {
     console.error('Erro ao adicionar link:', err);
     res.status(500).send('Erro ao adicionar link');
   }
 });
+
 
 // Deletar link
 app.post('/admin/delete/:id', isAuthenticated, async (req, res) => {

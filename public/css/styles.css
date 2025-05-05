@@ -6,10 +6,24 @@
 }
 
 body {
-    background: linear-gradient(to right, var(--cor-primaria), var(--cor-secundaria), var(--cor-terciaria));
+    background: linear-gradient(135deg, var(--cor-primaria), var(--cor-terciaria));
     color: #fff;
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
+    animation: gradientAnimation 10s ease infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
 }
 
 .hero {
